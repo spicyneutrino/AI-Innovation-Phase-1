@@ -1,8 +1,12 @@
 import boto3
+import os
 from pathlib import Path
 from botocore.exceptions import ClientError
+from dotenv import load_dotenv
 
-BUCKET_NAME = "ms-sos-regulations-data-december-2025" 
+load_dotenv()
+
+BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "ms-sos-regulations-data-december-2025")
 LOCAL_DATA_FOLDER = Path("data") 
 
 def upload_folder_to_s3():
