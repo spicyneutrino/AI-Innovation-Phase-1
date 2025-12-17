@@ -8,7 +8,7 @@ A Retrieval-Augmented Generation (RAG) application that queries Mississippi Secr
 
 1. Get the latest code
    ```bash
-   git clone git@github.com:spicyneutrino/AI-Innovation-Phase-1.git
+   git clone https://github.com/spicyneutrino/AI-Innovation-Phase-1.git
    cd AI-Innovation-Phase-1
    ```
 
