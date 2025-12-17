@@ -8,7 +8,8 @@ A Retrieval-Augmented Generation (RAG) application that queries Mississippi Secr
 
 1. Get the latest code
    ```bash
-   git pull origin main
+   git clone git@github.com:spicyneutrino/AI-Innovation-Phase-1.git
+   cd AI-Innovation-Phase-1
    ```
 
 2. Install dependencies
@@ -33,14 +34,15 @@ A Retrieval-Augmented Generation (RAG) application that queries Mississippi Secr
      pip install --user streamlit
      python -m streamlit run src/app.py
      ```
+
    Consider using a virtual environment (venv) or pipx to avoid polluting your global Python environment.
 
 3. Set AWS credentials
    The app needs credentials to access your AWS account. Use the environment variables below (replace the placeholder values).
    ```bash
-   export AWS_ACCESS_KEY_ID="..."
-   export AWS_SECRET_ACCESS_KEY="..."
-   export AWS_SESSION_TOKEN="..."
+   export AWS_ACCESS_KEY_ID="YOUR_ACCESS_KEY"
+   export AWS_SECRET_ACCESS_KEY="YOUR_SECRET_KEY"
+   export AWS_SESSION_TOKEN="YOUR_SESSION_TOKEN"
    export AWS_DEFAULT_REGION="us-east-1"
    ```
 
