@@ -1,7 +1,11 @@
 import streamlit as st
+import os
+from dotenv import load_dotenv
 from rag_engine import RAGEngine
 
-KB_ID = "ENBRB90GYL"
+load_dotenv()
+
+KB_ID = os.getenv("BEDROCK_KB_ID", "ENBRB90GYL")
 
 def main():
     st.set_page_config(page_title="MS Regulations", layout="wide")
