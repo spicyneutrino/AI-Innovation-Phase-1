@@ -1,51 +1,29 @@
-import os
-import boto3
-import re
-from botocore.exceptions import ClientError
-from dotenv import load_dotenv
+# inside query()
 
-load_dotenv()
+answer = response["output"]["text"]
+refs_out = []
 
-class RAGEngine:
-    def __init__(self, kb_id):
-        self.kb_id = kb_id
-        self.region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
-        # Client for the Knowledge Base
-        self.client = boto3.client("bedrock-agent-runtime", region_name=self.region)
+for cit in response.get("citations", []):
+    for ref in cit.get("retrievedReferences", []):
+        s3_uri = ref.get("location", {}).get("s3Location", {}).get("uri", "")
+        filename = s3_uri.split("/")[-1] if s3_uri else None
 
-    def query(self, question):
-        try:
-            print(f"Asking Knowledge Base ({self.kb_id})...")
+        meta = ref.get("metadata", {}) or {}
+        refs_out.append({
+            "filename": filename,
+            "uri": s3_uri,
+            "agency": meta.get("agency"),
+            "title": meta.get("title"),
+            "law": meta.get("law"),
+        })
 
-            model_arn = os.getenv(
-                "BEDROCK_MODEL_ARN", 
-                f"arn:aws:bedrock:{self.region}::foundation-model/amazon.nova-pro-v1:0"
-            )
-            
-            # This API call connects the KB + The Model
-            response = self.client.retrieve_and_generate(
-                input={'text': question},
-                retrieveAndGenerateConfiguration={
-                    'type': 'KNOWLEDGE_BASE',
-                    'knowledgeBaseConfiguration': {
-                        'knowledgeBaseId': self.kb_id,
-                        'modelArn': model_arn,
-                    }
-                }
-            )
-            
-            raw_answer = response['output']['text']
+# de-dup by filename+fields
+seen = set()
+dedup = []
+for r in refs_out:
+    key = (r.get("filename"), r.get("agency"), r.get("title"), r.get("law"))
+    if key not in seen:
+        seen.add(key)
+        dedup.append(r)
 
-            clean_answer = re.sub(r'\[\d+\]|%\[\d+\]%|\{[^}]+\}', '', raw_answer).strip()
-
-            citations = []
-            if 'citations' in response:
-                for cit in response['citations']:
-                    for ref in cit.get('retrievedReferences', []):
-                        uri = ref.get('location', {}).get('s3Location', {}).get('uri', '')
-                        if uri: citations.append(uri.split('/')[-1])
-            
-            return clean_answer, list(set(citations))
-
-        except ClientError as e:
-            return f"Error: {e}", []
+return answer, dedup
