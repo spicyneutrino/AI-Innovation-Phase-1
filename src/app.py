@@ -7,24 +7,26 @@ load_dotenv()
 
 KB_ID = os.getenv("BEDROCK_KB_ID", "ENBRB90GYL")
 
-
 def format_answer_with_sources(answer: str, sources: list[str]) -> str:
     """
-    Format as: Answer. {filename.pdf}  (or {file1.pdf, file2.pdf})
+    Format as: Answer. {[filename.pdf](url)}
     """
-    answer = (answer or "").rstrip()
+
+    answer = (answer or "").strip()
+    
     if not sources:
         return answer
 
-    src = ", ".join(sorted(set(sources)))
+    base_url = "https://www.sos.ms.gov/adminsearch/ACCode/"
 
-    if not answer:
-        return f"{{{src}}}"
+    formatted_sources = [f"[{s}]({base_url}{s})" for s in sorted(set(sources))]
 
-    # Ensure the exact pattern: "Answer. {file.pdf}"
-    if answer[-1] in ".!?":
-        return f"{answer} {{{src}}}"
-    return f"{answer}. {{{src}}}"
+    src_str = ", ".join(formatted_sources)
+
+    if answer and answer[-1] in ".!?":
+        return f"{answer} {{{src_str}}}"
+
+    return f"{answer}. {{{src_str}}}"
 
 
 def main():
@@ -51,7 +53,6 @@ def main():
                 formatted = format_answer_with_sources(answer, sources)
                 st.markdown(formatted)
 
-        # Store the formatted answer so citations persist in chat history
         st.session_state.messages.append({"role": "assistant", "content": formatted})
 
 

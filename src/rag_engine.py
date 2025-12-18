@@ -1,5 +1,6 @@
 import os
 import boto3
+import re
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 
@@ -33,8 +34,10 @@ class RAGEngine:
                 }
             )
             
-            # Extract Answer & Citations
-            answer = response['output']['text']
+            raw_answer = response['output']['text']
+
+            clean_answer = re.sub(r'\[\d+\]|%\[\d+\]%|\{[^}]+\}', '', raw_answer).strip()
+
             citations = []
             if 'citations' in response:
                 for cit in response['citations']:
@@ -42,7 +45,7 @@ class RAGEngine:
                         uri = ref.get('location', {}).get('s3Location', {}).get('uri', '')
                         if uri: citations.append(uri.split('/')[-1])
             
-            return answer, list(set(citations))
+            return clean_answer, list(set(citations))
 
         except ClientError as e:
             return f"Error: {e}", []
