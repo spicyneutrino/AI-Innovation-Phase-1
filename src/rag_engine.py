@@ -3,11 +3,14 @@ import boto3
 import re
 from botocore.exceptions import ClientError
 import streamlit as st
+
 class RAGEngine:
     def __init__(self, kb_id):
         self.kb_id = kb_id
-        self.region = st.secrets.get("AWS_DEFAULT_REGION", "us-east-1")
-        # Client for the Knowledge Base
+        # Use the region from secrets, or default to us-east-1
+        self.region = st.secrets.get("AWS_REGION", "us-east-1")
+
+        # Initialize the Bedrock client with the secrets
         self.client = boto3.client(
             "bedrock-agent-runtime",
             region_name=self.region,
@@ -17,14 +20,11 @@ class RAGEngine:
 
     def query(self, question):
         try:
-            print(f"Asking Knowledge Base ({self.kb_id})...")
-
             model_arn = os.getenv(
                 "BEDROCK_MODEL_ARN", 
                 f"arn:aws:bedrock:{self.region}::foundation-model/amazon.nova-pro-v1:0"
             )
             
-            # This API call connects the KB + The Model
             response = self.client.retrieve_and_generate(
                 input={'text': question},
                 retrieveAndGenerateConfiguration={
@@ -37,7 +37,8 @@ class RAGEngine:
             )
             
             raw_answer = response['output']['text']
-
+            
+            # Clean up citations markers
             clean_answer = re.sub(r'\[\d+\]|%\[\d+\]%|\{[^}]+\}', '', raw_answer).strip()
 
             citations = []
