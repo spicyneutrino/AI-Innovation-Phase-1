@@ -1,4 +1,11 @@
 import streamlit as st
+import os
+
+if "AWS_ACCESS_KEY_ID" in st.secrets:
+    os.environ["AWS_ACCESS_KEY_ID"] = st.secrets["AWS_ACCESS_KEY_ID"]
+    os.environ["AWS_SECRET_ACCESS_KEY"] = st.secrets["AWS_SECRET_ACCESS_KEY"]
+    os.environ["AWS_DEFAULT_REGION"] = st.secrets.get("AWS_DEFAULT_REGION", "us-east-1")
+
 from rag_engine import RAGEngine
 
 KB_ID = st.secrets.get("BEDROCK_KB_ID", "ENBRB90GYL")
@@ -22,6 +29,8 @@ def check_password():
     else:
         return True
 
+BASE_URL = "https://www.sos.ms.gov/adminsearch/ACCode/"
+
 def format_answer_inline(answer: str, refs: list[dict]) -> str:
     answer = (answer or "").rstrip()
     if not refs:
@@ -29,16 +38,24 @@ def format_answer_inline(answer: str, refs: list[dict]) -> str:
 
     parts = []
     for r in refs:
+        if isinstance(r, str):
+            parts.append(f"[{r}]({BASE_URL}{r})")
+            continue
+            
+        # 1. Create the clickable link: [filename.pdf](url)
         fn = r.get("filename") or "unknown"
+        link = f"[{fn}]({BASE_URL}{fn})"
+        
+        # 2. Gather metadata (Agency, Law, Title)
         extras = []
         if r.get("agency"): extras.append(f"Agency: {r['agency']}")
         if r.get("title"):  extras.append(f"Title: {r['title']}")
         if r.get("law"):    extras.append(f"Law: {r['law']}")
 
         if extras:
-            parts.append(f"{fn} — " + "; ".join(extras))
+            parts.append(f"{link} — " + "; ".join(extras))
         else:
-            parts.append(fn)
+            parts.append(link)
 
     citations = "; ".join(parts)
 
