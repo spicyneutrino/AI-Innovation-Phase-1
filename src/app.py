@@ -1,9 +1,5 @@
 import streamlit as st
-import os
-from dotenv import load_dotenv
 from rag_engine import RAGEngine
-
-load_dotenv()
 
 KB_ID = st.secrets.get("BEDROCK_KB_ID", "ENBRB90GYL")
 
@@ -12,7 +8,7 @@ def check_password():
     def password_entered():
         if st.session_state["password"] == st.secrets["APP_PASSWORD"]:
             st.session_state["password_correct"] = True
-            del st.session_state["password"]  
+            del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
@@ -26,27 +22,29 @@ def check_password():
     else:
         return True
 
-def format_answer_with_sources(answer: str, sources: list[str]) -> str:
-    """
-    Format as: Answer. {[filename.pdf](url)}
-    """
-
-    answer = (answer or "").strip()
-    
-    if not sources:
+def format_answer_inline(answer: str, refs: list[dict]) -> str:
+    answer = (answer or "").rstrip()
+    if not refs:
         return answer
 
-    base_url = "https://www.sos.ms.gov/adminsearch/ACCode/"
+    parts = []
+    for r in refs:
+        fn = r.get("filename") or "unknown"
+        extras = []
+        if r.get("agency"): extras.append(f"Agency: {r['agency']}")
+        if r.get("title"):  extras.append(f"Title: {r['title']}")
+        if r.get("law"):    extras.append(f"Law: {r['law']}")
 
-    formatted_sources = [f"[{s}]({base_url}{s})" for s in sorted(set(sources))]
+        if extras:
+            parts.append(f"{fn} — " + "; ".join(extras))
+        else:
+            parts.append(fn)
 
-    src_str = ", ".join(formatted_sources)
+    citations = "; ".join(parts)
 
-    if answer and answer[-1] in ".!?":
-        return f"{answer} {{{src_str}}}"
-
-    return f"{answer}. {{{src_str}}}"
-
+    if answer and answer[-1] not in ".!?":
+        answer += "."
+    return f"{answer} {{{citations}}}"
 
 def main():
     st.set_page_config(page_title="MS Regulations", layout="wide")
@@ -63,9 +61,9 @@ def main():
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    for m in st.session_state.messages:
+        with st.chat_message(m["role"]):
+            st.markdown(m["content"])
 
     if prompt := st.chat_input("Ask a question about MS regulations..."):
         st.chat_message("user").markdown(prompt)
@@ -73,12 +71,11 @@ def main():
 
         with st.chat_message("assistant"):
             with st.spinner("Searching regulations..."):
-                answer, sources = st.session_state.engine.query(prompt)
-                formatted = format_answer_with_sources(answer, sources)
+                answer, refs = st.session_state.engine.query(prompt)
+                formatted = format_answer_inline(answer, refs)
                 st.markdown(formatted)
 
         st.session_state.messages.append({"role": "assistant", "content": formatted})
-
 
 if __name__ == "__main__":
     main()

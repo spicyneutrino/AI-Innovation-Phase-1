@@ -38,7 +38,7 @@ class RAGEngine:
             
             raw_answer = response['output']['text']
             
-            # Clean up citations markers
+            # Clean up citations markers like [1], %[1]%, etc.
             clean_answer = re.sub(r'\[\d+\]|%\[\d+\]%|\{[^}]+\}', '', raw_answer).strip()
 
             citations = []
