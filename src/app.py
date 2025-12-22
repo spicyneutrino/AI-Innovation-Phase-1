@@ -32,36 +32,56 @@ def check_password():
 BASE_URL = "https://www.sos.ms.gov/adminsearch/ACCode/"
 
 def format_answer_inline(answer: str, refs: list[dict]) -> str:
+    
     answer = (answer or "").rstrip()
     if not refs:
         return answer
 
-    parts = []
+    unique_refs = []
+    seen = set()
     for r in refs:
         if isinstance(r, str):
-            parts.append(f"[{r}]({BASE_URL}{r})")
+            key = r
+        else:
+            key = (r.get("filename"), r.get("law"))
+        
+        if key not in seen:
+            seen.add(key)
+            unique_refs.append(r)
+
+    footnote_markers = "".join([f"[{i+1}]" for i in range(len(unique_refs))])
+    
+    if answer[-1] not in ".!?":
+        answer += "."
+    
+    formatted_text = f"{answer} {footnote_markers}"
+
+
+    sources_text = "\n\n---\n**Sources:**\n"
+    
+    for i, r in enumerate(unique_refs):
+        index = i + 1
+        
+        if isinstance(r, str):
+            link = f"[{r}]({BASE_URL}{r})"
+            sources_text += f"{index}. {link}\n"
             continue
-            
-        # 1. Create the clickable link: [filename.pdf](url)
+
         fn = r.get("filename") or "unknown"
         link = f"[{fn}]({BASE_URL}{fn})"
         
-        # 2. Gather metadata (Agency, Law, Title)
-        extras = []
-        if r.get("agency"): extras.append(f"Agency: {r['agency']}")
-        if r.get("title"):  extras.append(f"Title: {r['title']}")
-        if r.get("law"):    extras.append(f"Law: {r['law']}")
-
-        if extras:
-            parts.append(f"{link} — " + "; ".join(extras))
+        meta_parts = []
+        if r.get("title"):  meta_parts.append(f"**{r['title']}**")
+        if r.get("agency"): meta_parts.append(f"{r['agency']}")
+        
+        meta_str = " | ".join(meta_parts)
+        
+        if meta_str:
+            sources_text += f"{index}. {link} — {meta_str}\n"
         else:
-            parts.append(link)
+            sources_text += f"{index}. {link}\n"
 
-    citations = "; ".join(parts)
-
-    if answer and answer[-1] not in ".!?":
-        answer += "."
-    return f"{answer} {{{citations}}}"
+    return formatted_text + sources_text
 
 def main():
     st.set_page_config(page_title="MS Regulations", layout="wide")
