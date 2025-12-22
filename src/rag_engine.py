@@ -2,16 +2,18 @@ import os
 import boto3
 import re
 from botocore.exceptions import ClientError
-from dotenv import load_dotenv
-
-load_dotenv()
-
+import streamlit as st
 class RAGEngine:
     def __init__(self, kb_id):
         self.kb_id = kb_id
-        self.region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+        self.region = st.secrets.get("AWS_DEFAULT_REGION", "us-east-1")
         # Client for the Knowledge Base
-        self.client = boto3.client("bedrock-agent-runtime", region_name=self.region)
+        self.client = boto3.client(
+            "bedrock-agent-runtime",
+            region_name=self.region,
+            aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"]
+        )
 
     def query(self, question):
         try:

@@ -5,7 +5,26 @@ from rag_engine import RAGEngine
 
 load_dotenv()
 
-KB_ID = os.getenv("BEDROCK_KB_ID", "ENBRB90GYL")
+KB_ID = st.secrets.get("BEDROCK_KB_ID", "ENBRB90GYL")
+
+def check_password():
+    """Returns `True` if the user had the correct password."""
+    def password_entered():
+        if st.session_state["password"] == st.secrets["APP_PASSWORD"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        st.text_input("Password", type="password", on_change=password_entered, key="password")
+        return False
+    elif not st.session_state["password_correct"]:
+        st.text_input("Password", type="password", on_change=password_entered, key="password")
+        st.error("Password is incorrect.")
+        return False
+    else:
+        return True
 
 def format_answer_with_sources(answer: str, sources: list[str]) -> str:
     """
@@ -31,6 +50,11 @@ def format_answer_with_sources(answer: str, sources: list[str]) -> str:
 
 def main():
     st.set_page_config(page_title="MS Regulations", layout="wide")
+
+    if not check_password():
+        st.stop()  # Stop here if password is wrong
+
+    # Main app
     st.title("Mississippi SoS Assistant")
 
     if "engine" not in st.session_state:
