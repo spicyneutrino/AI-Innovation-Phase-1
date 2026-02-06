@@ -84,19 +84,74 @@ def format_answer_inline(answer: str, refs: list[dict]) -> str:
     return formatted_text + sources_text
 
 def main():
+    # Main app
     st.set_page_config(page_title="MS Regulations", layout="wide")
 
     if not check_password():
         st.stop()  # Stop here if password is wrong
-
-    # Main app
-    st.title("Mississippi SoS Assistant")
+    
+    # Homepage Header (Logo + Description + Clear Chat Button)
+    col1, col2, col3 = st.columns([1, 4, 1])
+    with col1:
+        st.image("src/ms_sos_logo.png", width=150)
+    with col2:
+        st.title("Mississippi SoS Assistant")
+        st.markdown(
+            """
+            Welcome to the **Mississippi Secretary of State Regulation Assistant**. 
+            
+            An interactive AI chatbot that provides information regarding the statutes and regulations of the Mississippi agencies.
+            
+            Ask any question below to get started!
+            """
+        )
+    with col3:
+        st.write("")  # Spacer
+        if st.button("🗑️ Clear Chat", use_container_width=True):
+            st.session_state.messages = []
+            st.rerun()
 
     if "engine" not in st.session_state:
         st.session_state.engine = RAGEngine(kb_id=KB_ID)
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
+
+    # Show suggested questions only when chat is empty
+    if len(st.session_state.messages) == 0:
+        st.markdown("### 💡 Try asking these questions:")
+        
+        suggested_questions = [
+            "To allow a department to perform a technical review, request change order approvals must contain?",
+            "What is the MJIC Unit responsible for?",
+            "What permit shall be required by any person or entity owning exotic livestock?",
+            "What is the filing application fee for a Loan Production Office?"
+        ]
+        
+        cols = st.columns(2)
+        for idx, question in enumerate(suggested_questions):
+            with cols[idx % 2]:
+                if st.button(f"{question}", key=f"suggested_{idx}", use_container_width=True):
+                    # Store the selected question in session state to process it
+                    st.session_state.selected_question = question
+                    st.rerun()
+
+    # Check if a suggested question was selected
+    if "selected_question" in st.session_state:
+        prompt = st.session_state.selected_question
+        del st.session_state.selected_question
+        
+        st.chat_message("user").markdown(prompt)
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+        with st.chat_message("assistant"):
+            with st.spinner("Searching regulations..."):
+                answer, refs = st.session_state.engine.query(prompt)
+                formatted = format_answer_inline(answer, refs)
+                st.markdown(formatted)
+
+        st.session_state.messages.append({"role": "assistant", "content": formatted})
+        st.rerun()
 
     for m in st.session_state.messages:
         with st.chat_message(m["role"]):
