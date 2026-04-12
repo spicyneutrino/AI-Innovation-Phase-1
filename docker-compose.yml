@@ -1,0 +1,13 @@
+services:
+  crawler:
+    build:
+      context: .
+    environment:
+      SOS_CRAWLER_RUNTIME_DIR: /app/var/sos_crawler
+      PLAYWRIGHT_HEADLESS: "true"
+    volumes:
+      - ./var/sos_crawler:/app/var/sos_crawler
+    # Override at runtime, e.g.:
+    # docker compose run --rm crawler uv run sos-crawler crawl --states TX --max-retries 0
+    command: ["uv", "run", "sos-crawler", "--help"]
+

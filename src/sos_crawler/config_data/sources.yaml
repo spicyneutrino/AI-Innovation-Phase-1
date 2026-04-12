@@ -1,0 +1,142 @@
+# config/sources.yaml
+# ─────────────────────────────────────────────────────────────────────────────
+# Per-state crawler configuration.
+# Each state entry is loaded by the CLI orchestrator and individual spiders.
+#
+# Fields:
+#   entrypoints   : List of start URLs passed to the spider's start_requests()
+#   sos_home      : Official SoS homepage (for reference/documentation)
+#   is_primary    : true only for Mississippi (RAG primary reference state)
+#   agencies      : The 3 target agency types and their identifiers
+# ─────────────────────────────────────────────────────────────────────────────
+
+states:
+  MS:
+    is_primary: true
+    sos_home: https://www.sos.ms.gov/
+    entrypoints:
+      - https://www.sos.ms.gov/regulation-enforcement/administrative-code
+    notes: "MS SoS is registrar for ~150 agencies. Uses Playwright + CodeSearch API."
+    agencies:
+      medical-licensure:
+        name: Mississippi State Board of Medical Licensure
+      real-estate:
+        name: Mississippi Real Estate Commission
+      dental:
+        name: Mississippi State Board of Dental Examiners
+
+  AL:
+    is_primary: false
+    sos_home: https://admincode.legislature.state.al.us/
+    entrypoints:
+      - https://admincode.legislature.state.al.us/administrative-code/270
+      - https://admincode.legislature.state.al.us/administrative-code/545
+      - https://admincode.legislature.state.al.us/administrative-code/790
+    notes: "Published by Alabama Legislative Services Agency. Pure HTML, no JS needed."
+    agencies:
+      dental:
+        name: Board of Dental Examiners of Alabama
+        agency_id: "270"
+      medical-licensure:
+        name: Medical Licensure Commission of Alabama
+        agency_id: "545"
+      real-estate:
+        name: Alabama Real Estate Commission
+        agency_id: "790"
+
+  AR:
+    is_primary: false
+    sos_home: https://codeofarrules.arkansas.gov/
+    entrypoints:
+      - https://codeofarrules.arkansas.gov/Rules/Rule?levelType=chapter&titleID=17&chapterID=173&subChapterID=null&partID=null&subPartID=null&sectionID=null
+      - https://codeofarrules.arkansas.gov/Rules/Rule?levelType=chapter&titleID=17&chapterID=84&subChapterID=null&partID=null&subPartID=null&sectionID=null
+      - https://codeofarrules.arkansas.gov/Rules/Rule?levelType=chapter&titleID=17&chapterID=258&subChapterID=null&partID=null&subPartID=null&sectionID=null
+    notes: "Server-rendered HTML tree. Title 17 covers all 3 agencies."
+    agencies:
+      medical-licensure:
+        name: Arkansas State Medical Board
+        chapter_id: "173"
+        chapter_num: XXIV
+      dental:
+        name: Arkansas State Board of Dental Examiners
+        chapter_id: "84"
+        chapter_num: XXI
+      real-estate:
+        name: Arkansas Real Estate Commission
+        chapter_id: "258"
+        chapter_num: XXXIX
+
+  TX:
+    is_primary: false
+    sos_home: https://texas-sos.appianportalsgov.com/rules-and-meetings
+    entrypoints:
+      - https://texas-sos.appianportalsgov.com/rules-and-meetings?interface=VIEW_TAC&title=22&part=5
+      - https://texas-sos.appianportalsgov.com/rules-and-meetings?interface=VIEW_TAC&title=22&part=9
+      - https://texas-sos.appianportalsgov.com/rules-and-meetings?interface=VIEW_TAC&title=22&part=23
+    notes: "Appian JS portal. Playwright required. Title 22 = Examining Boards."
+    agencies:
+      dental:
+        name: State Board of Dental Examiners
+        title: "22"
+        part: "5"
+      medical-licensure:
+        name: Texas Medical Board
+        title: "22"
+        part: "9"
+      real-estate:
+        name: Texas Real Estate Commission
+        title: "22"
+        part: "23"
+
+  LA:
+    is_primary: false
+    sos_home: https://doa.la.gov/doa/osr/louisiana-administrative-code/
+    entrypoints:
+      - https://doa.la.gov/doa/osr/louisiana-administrative-code/
+    notes: "Title 46 covers all 3 agencies. PDFs per title volume. Playwright for accordion."
+    agencies:
+      medical-licensure:
+        name: Louisiana State Board of Medical Examiners
+        lac_title: "46"
+      dental:
+        name: Louisiana State Board of Dentistry
+        lac_title: "46"
+      real-estate:
+        name: Louisiana Real Estate Commission
+        lac_title: "46"
+
+  TN:
+    is_primary: false
+    sos_home: https://sos.tn.gov/publications/services/effective-rules-and-regulations-of-the-state-of-tennessee/
+    entrypoints:
+      - https://sos.tn.gov/publications/services/effective-rules-and-regulations-of-the-state-of-tennessee/
+      - https://sos.tn.gov/publications/services/administrative-register/
+    notes: "Agency chapter numbers: Medical=0880, RealEstate=1260, Dental=0460 (verify)."
+    agencies:
+      medical-licensure:
+        name: Tennessee Board of Medical Examiners
+        chapter_code: "0880"
+      dental:
+        name: Tennessee Board of Dentistry
+        chapter_code: "0460"
+      real-estate:
+        name: Tennessee Real Estate Commission
+        chapter_code: "1260"
+
+  GA:
+    is_primary: false
+    sos_home: https://rules.sos.ga.gov/gac/
+    entrypoints:
+      - https://rules.sos.ga.gov/gac/
+    notes: "Fastcase-hosted. Department numbers: Medical~360, RealEstate~520, Dental~150 (verify)."
+    agencies:
+      medical-licensure:
+        name: Georgia Composite Medical Board
+        dept_num: "360"
+      dental:
+        name: Georgia Board of Dentistry
+        dept_num: "150"
+      real-estate:
+        name: Georgia Real Estate Commission and Appraisers Board
+        dept_num: "520"
+

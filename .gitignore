@@ -1,25 +1,99 @@
-# Python-generated files
+# --- Python ---
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+*.so
+.Python
 build/
+develop-eggs/
 dist/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
 wheels/
-*.egg-info
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Virtual environments
-.venv
+.venv/
+venv/
+ENV/
+env/
+automated-data-collection/.venv/
 
-# Local Data
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.ruff_cache/
+.mypy_cache/
+
+# --- uv (keep uv.lock committed) ---
+
+# --- Local data & exports ---
 data/
 *.csv
-*.json
 
-# Environment Variables & Secrets
+# Scoped JSON: avoid ignoring every *.json repo-wide; generated JSON is under ignored dirs.
+
+# --- Automated data collection (Scrapy) ---
+automated-data-collection/logs/
+automated-data-collection/output/
+automated-data-collection/downloads/
+automated-data-collection/.scrapy/
+automated-data-collection/.cache/
+
+# Scrapy HTTP cache (project root)
+.scrapy/
+
+# Scrapy `-o` from repo root
+output/
+
+# --- Logs ---
+logs/
+*.log
+
+# --- Markdown docs (keep only README) ---
+*.md
+!README.md
+
+# --- Secrets & env ---
 .env
-
-# Streamlit secrets
+.env.*
+!.env.example
 .streamlit/secrets.toml
+secrets.toml
+*.secrets
+*.secret
+# Archives (may contain source + embedded secrets)
+src.zip
+*.zip
+*.tar.gz
 
-# OS
+# --- IDE / editors ---
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# --- OS ---
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini

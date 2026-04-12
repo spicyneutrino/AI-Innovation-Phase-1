@@ -1,0 +1,58 @@
+# config/agency_allowlists.yaml
+# ─────────────────────────────────────────────────────────────────────────────
+# Used by AgencyScopePipeline when CRAWLER_MODE=designated.
+#
+# Each list entry is a substring matched (case-insensitive) against:
+#   agency name, title, doc_url, source_url
+#
+# Add more terms if a state site uses variant spellings.
+# ─────────────────────────────────────────────────────────────────────────────
+
+designated_agencies:
+  MS:
+    - medical licensure
+    - real estate commission
+    - dental examiners
+
+  AL:
+    - dental examiners
+    - medical licensure
+    - real estate commission
+    # Agency IDs as fallback URL match
+    - /270
+    - /545
+    - /790
+
+  AR:
+    - medical board
+    - dental examiners
+    - real estate commission
+    # Chapter IDs as fallback URL match
+    - chapterID=173
+    - chapterID=84
+    - chapterID=258
+
+  TX:
+    - dental examiners
+    - medical board
+    - real estate commission
+    # Part numbers as fallback URL match
+    - part=5
+    - part=9
+    - part=23
+
+  LA:
+    - medical examiners
+    - dentistry
+    - real estate commission
+
+  TN:
+    - medical examiners
+    - dentistry
+    - real estate commission
+
+  GA:
+    - composite medical board
+    - board of dentistry
+    - real estate commission
+

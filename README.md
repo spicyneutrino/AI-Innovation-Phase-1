@@ -52,6 +52,63 @@ A Retrieval-Augmented Generation (RAG) application that queries Mississippi Secr
    uv run streamlit run src/app.py
    ```
 
+## SoS crawler and Playwright (distrobox)
+
+The automated crawler is packaged as `sos_crawler` and uses Scrapy + Playwright (Chromium). On hosts where Playwright’s browser dependencies are isolated in a container, use your Playwright distrobox first, then install and run from the repository root:
+
+```bash
+distrobox enter playwright-distrobox
+cd /path/to/AI-Innovation-Phase-1
+uv sync
+uv run playwright install chromium
+uv run sos-crawler crawl --states AR --max-retries 0
+```
+
+By default, crawl outputs are written under `var/sos_crawler/` (logs/output/downloads/cache). You can override with `SOS_CRAWLER_RUNTIME_DIR=/path` or `--runtime-dir /path`.
+
+### AWS Lambda note (read-only filesystem)
+
+AWS Lambda is read-only except for `/tmp`. When `AWS_LAMBDA_FUNCTION_NAME` is set, the crawler will automatically use:
+
+- `/tmp/sos_crawler` (unless you override with `SOS_CRAWLER_RUNTIME_DIR` or `--runtime-dir`)
+
+## SoS crawler with Docker (Playwright included)
+
+If you don’t want to use distrobox, you can run the crawler in Docker. This is **crawler-only** (no Streamlit app) and includes Chromium + Playwright dependencies via the official Playwright base image.
+
+### Build
+
+```bash
+docker build -t sos-crawler .
+```
+
+### Run (single state)
+
+Mount the runtime directory so outputs land on your host:
+
+```bash
+docker run --rm \
+  -v "$PWD/var/sos_crawler:/app/var/sos_crawler" \
+  -e SOS_CRAWLER_RUNTIME_DIR=/app/var/sos_crawler \
+  sos-crawler uv run sos-crawler crawl --states TX --max-retries 0
+```
+
+### Run (multi-state parallel)
+
+```bash
+docker run --rm \
+  -v "$PWD/var/sos_crawler:/app/var/sos_crawler" \
+  -e SOS_CRAWLER_RUNTIME_DIR=/app/var/sos_crawler \
+  sos-crawler uv run sos-crawler crawl --states MS AL AR TX --max-workers 4 --max-retries 0
+```
+
+### Docker Compose (optional)
+
+```bash
+docker compose build
+docker compose run --rm crawler uv run sos-crawler crawl --states AL --max-retries 0
+```
+
 ## Troubleshooting
 - Ensure your AWS credentials and region are set correctly.
 - If commands fail, confirm `uv` is installed and available in your PATH.
