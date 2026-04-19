@@ -1,6 +1,8 @@
+import html
 import os
 import re
 import uuid
+from pathlib import Path
 
 import streamlit as st
 
@@ -22,6 +24,30 @@ SUGGESTED_QUESTIONS = [
     {"category": "Agriculture",    "q": "What permit shall be required by any person or entity owning exotic livestock?"},
     {"category": "Finance",        "q": "What is the filing application fee for a Loan Production Office?"},
 ]
+
+# Optional bundled seal (same directory as this file or src/static/). PNGs are
+# gitignored by default; add an exception in .gitignore if you commit an asset.
+_LOGO_PATHS = (
+    Path(__file__).resolve().parent / "ms_sos_logo.png",
+    Path(__file__).resolve().parent / "static" / "ms_sos_logo.png",
+)
+
+
+def _show_logo(width: int = 88) -> None:
+    """Streamlit-safe logo: local file if present, else a styled fallback (no broken <img>)."""
+    for path in _LOGO_PATHS:
+        if path.is_file():
+            st.image(str(path), width=width)
+            return
+    side = max(56, min(width, 120))
+    st.markdown(
+        f'<div style="display:flex;justify-content:center;margin:0 0 10px 0;">'
+        f'<div style="width:{side}px;height:{side}px;border-radius:50%;'
+        "background:linear-gradient(160deg,#1e2d4a,#0d1528);border:2px solid #5b8fff;"
+        f'display:flex;align-items:center;justify-content:center;font-size:{side // 3}px;">'
+        "⚖️</div></div>",
+        unsafe_allow_html=True,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -152,8 +178,8 @@ button[data-testid="baseButton-primary"] {
     padding: 12px 0 !important;
 }
 [data-testid="stChatInputContainer"] textarea {
-    background-color: #111c35 !important;
-    border: 1px solid #1e2d4a !important;
+    background-color: #151d36 !important;
+    border: 1px solid #2a3f66 !important;
     border-radius: 8px !important;
     color: #e8eeff !important;
     font-family: 'Inter', sans-serif !important;
@@ -359,11 +385,11 @@ code {
 }
 div[data-testid^="column"] .stButton > button {
     text-align: left !important;
-    white-space: normal !important;
+    white-space: pre-line !important;
     height: auto !important;
-    min-height: 72px !important;
+    min-height: 88px !important;
     padding: 14px 16px !important;
-    line-height: 1.5 !important;
+    line-height: 1.45 !important;
     font-size: 13px !important;
 }
 
@@ -400,20 +426,18 @@ div[data-testid^="column"] .stButton > button {
 
 /* ── Password gate ───────────────────────────────────────────────────────── */
 .login-wrap {
-    max-width: 380px;
-    margin: 80px auto 0 auto;
     text-align: center;
 }
 .login-wrap h2 {
     font-size: 20px !important;
     font-weight: 600 !important;
     color: #e8eeff !important;
-    margin: 16px 0 4px 0 !important;
+    margin: 0 0 6px 0 !important;
 }
 .login-wrap p {
     color: #94a3b8;
     font-size: 14px;
-    margin: 0 0 24px 0;
+    margin: 0 0 20px 0;
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────────────────── */
@@ -434,33 +458,41 @@ div[data-testid^="column"] .stButton > button {
 
 def check_password() -> bool:
     def password_entered():
-        if st.session_state["password"] == st.secrets["APP_PASSWORD"]:
+        if st.session_state.get("password") == st.secrets["APP_PASSWORD"]:
             st.session_state["password_correct"] = True
             del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
+    def _login_panel(show_error: bool) -> None:
+        _, col, _ = st.columns([1, 1.2, 1])
+        with col:
+            st.markdown('<div style="margin-top:40px;"></div>', unsafe_allow_html=True)
+            _show_logo(80)
+            st.markdown(
+                '<div class="login-wrap">'
+                "<h2>SoS Regulation Assistant</h2>"
+                "<p>Mississippi Secretary of State · Regulatory Intelligence</p>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+            st.text_input(
+                "Password",
+                type="password",
+                on_change=password_entered,
+                key="password",
+                autocomplete="current-password",
+            )
+            if show_error:
+                st.error("Incorrect password.")
+
     if "password_correct" not in st.session_state:
-        _render_login()
-        st.text_input("Password", type="password", on_change=password_entered, key="password")
+        _login_panel(False)
         return False
-    elif not st.session_state["password_correct"]:
-        _render_login()
-        st.text_input("Password", type="password", on_change=password_entered, key="password")
-        st.error("Incorrect password.")
+    if not st.session_state["password_correct"]:
+        _login_panel(True)
         return False
     return True
-
-
-def _render_login():
-    st.markdown(
-        '<div class="login-wrap">'
-        '<img src="app/static/ms_sos_logo.png" width="72" style="margin-bottom:4px;">'
-        "<h2>SoS Regulation Assistant</h2>"
-        "<p>Mississippi Secretary of State · Regulatory Intelligence</p>"
-        "</div>",
-        unsafe_allow_html=True,
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -497,18 +529,20 @@ def init_session_state():
 def _state_badge(state_code: str) -> str:
     if not state_code:
         return ""
-    if state_code == "MS":
+    code = (state_code or "").strip().upper()[:8]
+    label = html.escape(code)
+    if code == "MS":
         cls = "sos-badge sos-badge-primary"
-    elif state_code in _STUB_STATES:
+    elif code in _STUB_STATES:
         cls = "sos-badge sos-badge-warning"
     else:
         cls = "sos-badge"
-    return f'<span class="{cls}">{state_code}</span>'
+    return f'<span class="{cls}">{label}</span>'
 
 
 def _styled_answer(answer: str, ref_count: int) -> str:
     """Append styled superscript footnote markers and return HTML."""
-    answer = (answer or "").rstrip()
+    answer = html.escape((answer or "").rstrip())
     if not ref_count:
         return answer
     if answer and answer[-1] not in ".!?":
@@ -524,7 +558,11 @@ def _citation_row(key: str, val: str, is_link: bool = False):
     """Render a single metadata row inside a citation expander."""
     if not val:
         return
-    val_html = f'<a href="{val}" target="_blank">{val}</a>' if is_link else val
+    val_esc = html.escape(val, quote=True)
+    if is_link:
+        val_html = f'<a href="{val_esc}" target="_blank" rel="noopener noreferrer">{val_esc}</a>'
+    else:
+        val_html = val_esc
     st.markdown(
         f'<div class="sos-meta-row">'
         f'<span class="sos-meta-key">{key}</span>'
@@ -551,9 +589,10 @@ def render_citations(refs: list[dict], engine: RAGEngine):
         with st.expander(expander_label):
             # Badge + filename header
             badge_html = _state_badge(state_code)
+            fn_safe = html.escape(fn)
             st.markdown(
                 f'<div style="margin-bottom:12px;">'
-                f'{badge_html}<span class="sos-cit-id">{fn}</span>'
+                f'{badge_html}<span class="sos-cit-id">{fn_safe}</span>'
                 f'</div>',
                 unsafe_allow_html=True,
             )
@@ -599,7 +638,7 @@ def render_citations(refs: list[dict], engine: RAGEngine):
 
 def render_sidebar():
     with st.sidebar:
-        st.image("src/ms_sos_logo.png", width=100)
+        _show_logo(96)
         st.markdown(
             '<p style="font-size:14px;font-weight:600;color:#e8eeff;margin:6px 0 0 0;">'
             "SoS Regulation Assistant</p>"
