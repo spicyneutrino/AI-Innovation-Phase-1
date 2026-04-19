@@ -13,7 +13,12 @@ class RAGEngine:
         self.region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
         self.client = boto3.client("bedrock-agent-runtime", region_name=self.region)
 
-    def query(self, question: str, session_id: str | None = None) -> tuple[str, list, str | None]:
+    def query(
+        self,
+        question: str,
+        session_id: str | None = None,
+        target_states: list[str] | None = None,
+    ) -> tuple[str, list, str | None]:
         try:
             print(f"Asking Knowledge Base ({self.kb_id})...")
             model_arn = os.getenv(
@@ -21,14 +26,55 @@ class RAGEngine:
                 f"arn:aws:bedrock:{self.region}::foundation-model/amazon.nova-pro-v1:0",
             )
 
+            kb_configuration: dict = {
+                "knowledgeBaseId": self.kb_id,
+                "modelArn": model_arn,
+            }
+
+            system_instruction = (
+                "You are an expert regulatory intelligence assistant for the Mississippi Secretary of State. "
+                "Your job is to provide clear, professional, and highly accurate answers regarding state regulations. "
+                "Read the Search Results carefully. You are encouraged to synthesize partial information. "
+                "If asked to compare states, create a structured side-by-side comparison using the data available. "
+                "If a specific detail is missing for one state but present for another, explain exactly what you found "
+                "and clearly state which specific details are missing from the current database. "
+                "Always format your response with clean spacing and bullet points.\n\n"
+                "Search Results:\n$search_results$\n\n"
+                "$output_format_instructions$\n\n"
+                "User Query:\n$query$"
+            )
+
+            kb_configuration["generationConfiguration"] = {
+                "promptTemplate": {
+                    "textPromptTemplate": system_instruction,
+                },
+            }
+
+            combined_states = [
+                s.strip().upper()
+                for s in (target_states or [])
+                if isinstance(s, str) and s.strip()
+            ]
+
+            retrieval_config = {
+                "vectorSearchConfiguration": {
+                    "numberOfResults": 20,
+                },
+            }
+            if combined_states:
+                retrieval_config["vectorSearchConfiguration"]["filter"] = {
+                    "in": {
+                        "key": "state",
+                        "value": combined_states,
+                    },
+                }
+                kb_configuration["retrievalConfiguration"] = retrieval_config
+
             params = {
                 "input": {"text": question},
                 "retrieveAndGenerateConfiguration": {
                     "type": "KNOWLEDGE_BASE",
-                    "knowledgeBaseConfiguration": {
-                        "knowledgeBaseId": self.kb_id,
-                        "modelArn": model_arn,
-                    },
+                    "knowledgeBaseConfiguration": kb_configuration,
                 },
             }
             if session_id:

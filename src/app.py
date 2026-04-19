@@ -18,6 +18,8 @@ MS_BASE_URL = "https://www.sos.ms.gov/adminsearch/ACCode/"
 
 _STUB_STATES = {"GA", "LA", "TN"}
 
+STATE_SCOPE_OPTIONS = ["MS", "LA", "TN", "AR", "GA", "TX", "AL"]
+
 SUGGESTED_QUESTIONS = [
     {"category": "Infrastructure", "q": "To allow a department to perform a technical review, request change order approvals must contain?"},
     {"category": "Agencies",       "q": "What is the MJIC Unit responsible for?"},
@@ -54,402 +56,12 @@ def _show_logo(width: int = 88) -> None:
 # Design system CSS
 # ---------------------------------------------------------------------------
 
-_CSS = """
-<style>
-/* ── Fonts ─────────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
-html, body, [class*="css"], .stMarkdown, .stText {
-    font-family: 'Inter', sans-serif !important;
-}
-
-/* ── Page ───────────────────────────────────────────────────────────────── */
-.stApp { background-color: #0b1326; }
-
-.main .block-container {
-    max-width: 960px !important;
-    padding-top: 28px !important;
-    padding-left: 40px !important;
-    padding-right: 40px !important;
-    padding-bottom: 16px !important;
-}
-
-/* ── Sidebar ────────────────────────────────────────────────────────────── */
-[data-testid="stSidebar"] {
-    background-color: #0b1326 !important;
-    border-right: 1px solid #1e2d4a !important;
-    min-width: 240px !important;
-    max-width: 240px !important;
-}
-[data-testid="stSidebar"] .block-container {
-    padding-top: 20px;
-    padding-left: 12px;
-    padding-right: 12px;
-}
-[data-testid="stSidebar"] hr {
-    border-color: #1e2d4a !important;
-    margin: 10px 0 !important;
-}
-[data-testid="stSidebar"] label,
-[data-testid="stSidebar"] .stMarkdown p {
-    color: #e8eeff !important;
-    font-size: 13px !important;
-}
-
-/* Active chat item (rendered as div, not button) */
-.active-chat-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: rgba(91, 143, 255, 0.1);
-    border-left: 2px solid #5b8fff;
-    border-radius: 6px;
-    padding: 8px 10px;
-    color: #5b8fff;
-    font-size: 13px;
-    font-weight: 500;
-    margin: 2px 0;
-    line-height: 1.4;
-    word-break: break-word;
-}
-.active-chat-dot {
-    color: #5b8fff;
-    font-size: 8px;
-    flex-shrink: 0;
-    margin-top: 1px;
-}
-.active-chat-meta {
-    font-size: 11px;
-    color: #5b8fff;
-    opacity: 0.7;
-    font-weight: 400;
-}
-
-/* ── Buttons ────────────────────────────────────────────────────────────── */
-.stButton > button {
-    background-color: #111c35 !important;
-    color: #e8eeff !important;
-    border: 1px solid #1e2d4a !important;
-    border-radius: 8px !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    height: 36px;
-    transition: background-color 0.15s ease, border-color 0.15s ease !important;
-}
-.stButton > button:hover {
-    background-color: #1e2d4a !important;
-    border-color: #5b8fff !important;
-    color: #e8eeff !important;
-}
-.stButton > button[kind="primary"],
-button[data-testid="baseButton-primary"] {
-    background-color: #5b8fff !important;
-    border-color: #5b8fff !important;
-    color: #0b1326 !important;
-    font-weight: 600 !important;
-}
-.stButton > button[kind="primary"]:hover {
-    background-color: #7aa3ff !important;
-    border-color: #7aa3ff !important;
-}
-
-/* ── Inputs ─────────────────────────────────────────────────────────────── */
-[data-testid="stTextInput"] input,
-[data-testid="stTextInputRootElement"] input {
-    background-color: #111c35 !important;
-    border: 1px solid #1e2d4a !important;
-    border-radius: 8px !important;
-    color: #e8eeff !important;
-    font-size: 14px !important;
-    font-family: 'Inter', sans-serif !important;
-}
-[data-testid="stTextInput"] input:focus,
-[data-testid="stTextInputRootElement"] input:focus {
-    border-color: #5b8fff !important;
-    box-shadow: 0 0 0 2px rgba(91, 143, 255, 0.2) !important;
-}
-[data-testid="stTextInput"] input::placeholder { color: #94a3b8 !important; }
-
-/* ── Chat input ─────────────────────────────────────────────────────────── */
-[data-testid="stChatInputContainer"] {
-    background-color: #0b1326 !important;
-    border-top: 1px solid #1e2d4a !important;
-    padding: 12px 0 !important;
-}
-[data-testid="stChatInputContainer"] textarea {
-    background-color: #151d36 !important;
-    border: 1px solid #2a3f66 !important;
-    border-radius: 8px !important;
-    color: #e8eeff !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 14px !important;
-}
-[data-testid="stChatInputContainer"] textarea:focus {
-    border-color: #5b8fff !important;
-    box-shadow: 0 0 0 2px rgba(91, 143, 255, 0.2) !important;
-}
-[data-testid="stChatInputContainer"] textarea::placeholder { color: #94a3b8 !important; }
-
-/* ── Chat messages ───────────────────────────────────────────────────────── */
-[data-testid="stChatMessage"] {
-    background-color: transparent !important;
-    border: none !important;
-    padding: 8px 0 !important;
-}
-/* User — right-aligned bubble */
-[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-    flex-direction: row-reverse !important;
-}
-[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) [data-testid="stChatMessageContent"] {
-    background-color: #111c35 !important;
-    border: 1px solid #1e2d4a !important;
-    border-radius: 8px !important;
-    padding: 10px 14px !important;
-    margin-left: auto !important;
-    max-width: 78% !important;
-}
-/* Assistant — full width, transparent */
-[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) [data-testid="stChatMessageContent"] {
-    background-color: transparent !important;
-    max-width: 100% !important;
-}
-/* Avatars */
-[data-testid="chatAvatarIcon-user"],
-[data-testid="chatAvatarIcon-assistant"] {
-    background-color: #111c35 !important;
-    border: 1px solid #1e2d4a !important;
-    border-radius: 50% !important;
-    color: #e8eeff !important;
-}
-
-/* ── Footnote markers ────────────────────────────────────────────────────── */
-sup.fn-ref {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: #5b8fff;
-    background-color: rgba(91, 143, 255, 0.12);
-    border: 1px solid rgba(91, 143, 255, 0.3);
-    border-radius: 3px;
-    padding: 1px 4px;
-    vertical-align: super;
-    margin-left: 2px;
-    cursor: default;
-    white-space: nowrap;
-    line-height: 1;
-}
-
-/* ── Expanders (citations) ───────────────────────────────────────────────── */
-[data-testid="stExpander"] {
-    background-color: #111c35 !important;
-    border: 1px solid #1e2d4a !important;
-    border-radius: 8px !important;
-    margin-bottom: 6px !important;
-    overflow: hidden;
-}
-[data-testid="stExpander"] summary,
-.streamlit-expanderHeader {
-    background-color: #111c35 !important;
-    color: #e8eeff !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 12px !important;
-    padding: 10px 14px !important;
-    border-radius: 8px !important;
-}
-[data-testid="stExpander"] summary:hover,
-.streamlit-expanderHeader:hover { background-color: #1e2d4a !important; }
-[data-testid="stExpander"] > div:last-child,
-.streamlit-expanderContent {
-    background-color: #0d1830 !important;
-    border-top: 1px solid #1e2d4a !important;
-    border-left: 2px solid #5b8fff !important;
-    padding: 14px 16px !important;
-}
-
-/* ── Dividers ───────────────────────────────────────────────────────────── */
-hr { border-color: #1e2d4a !important; margin: 12px 0 !important; }
-
-/* ── Typography ─────────────────────────────────────────────────────────── */
-h1 { font-size: 22px !important; font-weight: 600 !important; color: #e8eeff !important; line-height: 1.2 !important; }
-h2 { font-size: 20px !important; font-weight: 600 !important; color: #e8eeff !important; line-height: 1.2 !important; }
-h3 { font-size: 15px !important; font-weight: 600 !important; color: #e8eeff !important; line-height: 1.2 !important; }
-
-/* ── Inline code / citations ────────────────────────────────────────────── */
-code {
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 12px !important;
-    background-color: #111c35 !important;
-    border: 1px solid #1e2d4a !important;
-    border-radius: 4px !important;
-    padding: 1px 5px !important;
-    color: #5b8fff !important;
-}
-
-/* ── State badges ────────────────────────────────────────────────────────── */
-.sos-badge {
-    display: inline-block;
-    background-color: #1e2d4a;
-    color: #e8eeff;
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    border-radius: 4px;
-    padding: 2px 7px;
-    margin-right: 6px;
-    vertical-align: middle;
-}
-.sos-badge-primary { background-color: #5b8fff; color: #0b1326; }
-.sos-badge-warning { background-color: transparent; border: 1px solid #fbbf24; color: #fbbf24; }
-
-/* ── Context mode badge ─────────────────────────────────────────────────── */
-.ctx-badge {
-    display: inline-block;
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    border-radius: 4px;
-    padding: 2px 8px;
-    vertical-align: middle;
-    margin-left: 10px;
-}
-.ctx-on  { background-color: rgba(91, 143, 255, 0.12); color: #5b8fff; border: 1px solid rgba(91,143,255,0.3); }
-.ctx-off { background-color: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
-
-/* ── Citation meta rows ─────────────────────────────────────────────────── */
-.sos-meta-row {
-    display: flex;
-    gap: 8px;
-    align-items: baseline;
-    margin-bottom: 5px;
-    font-size: 13px;
-    line-height: 1.5;
-}
-.sos-meta-key {
-    font-weight: 500;
-    color: #94a3b8;
-    min-width: 90px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    flex-shrink: 0;
-}
-.sos-meta-val { color: #e8eeff; word-break: break-all; }
-.sos-meta-val a { color: #5b8fff !important; text-decoration: none !important; }
-.sos-meta-val a:hover { text-decoration: underline !important; }
-.sos-cit-id { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5b8fff; }
-
-/* ── Micro labels (section headers) ─────────────────────────────────────── */
-.sos-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: #94a3b8;
-    margin: 0 0 8px 0;
-}
-
-/* ── Welcome / empty state ───────────────────────────────────────────────── */
-.welcome-hero {
-    text-align: center;
-    padding: 48px 0 32px 0;
-}
-.welcome-hero h2 {
-    font-size: 26px !important;
-    font-weight: 600 !important;
-    color: #e8eeff !important;
-    margin: 0 0 8px 0 !important;
-}
-.welcome-hero p {
-    color: #94a3b8;
-    font-size: 15px;
-    margin: 0;
-}
-
-/* Suggested question cards */
-.suggest-card-category {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: #5b8fff;
-    margin-bottom: 5px;
-}
-.suggest-card-q {
-    font-size: 13px;
-    color: #e8eeff;
-    line-height: 1.5;
-}
-div[data-testid^="column"] .stButton > button {
-    text-align: left !important;
-    white-space: pre-line !important;
-    height: auto !important;
-    min-height: 88px !important;
-    padding: 14px 16px !important;
-    line-height: 1.45 !important;
-    font-size: 13px !important;
-}
-
-/* ── Link buttons ────────────────────────────────────────────────────────── */
-[data-testid="stLinkButton"] a {
-    background-color: #111c35 !important;
-    border: 1px solid #5b8fff !important;
-    color: #5b8fff !important;
-    border-radius: 8px !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    text-decoration: none !important;
-    padding: 6px 14px !important;
-    display: inline-block !important;
-}
-[data-testid="stLinkButton"] a:hover {
-    background-color: #5b8fff !important;
-    color: #0b1326 !important;
-}
-
-/* ── Checkbox ───────────────────────────────────────────────────────────── */
-[data-testid="stCheckbox"] label { color: #e8eeff !important; font-size: 13px !important; }
-
-/* ── Text area (doc preview) ─────────────────────────────────────────────── */
-[data-testid="stTextArea"] textarea {
-    background-color: #0b1326 !important;
-    border: 1px solid #1e2d4a !important;
-    border-radius: 6px !important;
-    color: #94a3b8 !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 12px !important;
-    line-height: 1.6 !important;
-}
-
-/* ── Password gate ───────────────────────────────────────────────────────── */
-.login-wrap {
-    text-align: center;
-}
-.login-wrap h2 {
-    font-size: 20px !important;
-    font-weight: 600 !important;
-    color: #e8eeff !important;
-    margin: 0 0 6px 0 !important;
-}
-.login-wrap p {
-    color: #94a3b8;
-    font-size: 14px;
-    margin: 0 0 20px 0;
-}
-
-/* ── Scrollbar ───────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: #0b1326; }
-::-webkit-scrollbar-thumb { background: #1e2d4a; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #5b8fff; }
-
-/* ── Spinner ─────────────────────────────────────────────────────────────── */
-[data-testid="stSpinner"] { color: #5b8fff !important; }
-</style>
-"""
+def load_css():
+    """Reads the external CSS file and injects it into Streamlit."""
+    css_path = Path(__file__).resolve().parent / "style.css"
+    if css_path.is_file():
+        with open(css_path, "r") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------
@@ -576,7 +188,8 @@ def _citation_row(key: str, val: str, is_link: bool = False):
 # Citation rendering
 # ---------------------------------------------------------------------------
 
-def render_citations(refs: list[dict], engine: RAGEngine):
+def render_citations(refs: list[dict], engine: RAGEngine, *, key_ns: str):
+    """key_ns must be unique per assistant message (e.g. message index) so preview widgets never collide."""
     if not refs:
         return
     st.markdown('<div class="sos-label" style="margin-top:14px;">Sources</div>', unsafe_allow_html=True)
@@ -609,9 +222,17 @@ def render_citations(refs: list[dict], engine: RAGEngine):
             if s3_uri:
                 url = engine.get_presigned_url(s3_uri)
                 if url:
-                    st.link_button("⬇  Download / View file", url)
+                    st.link_button(
+                        "⬇  Download / View file",
+                        url,
+                        key=f"dl_{key_ns}_{i}",
+                    )
             elif state_code == "MS" and fn and fn != "unknown":
-                st.link_button("↗  View on sos.ms.gov", f"{MS_BASE_URL}{fn}")
+                st.link_button(
+                    "↗  View on sos.ms.gov",
+                    f"{MS_BASE_URL}{fn}",
+                    key=f"ms_{key_ns}_{i}",
+                )
 
             # Text preview for .txt documents
             if s3_uri and fn.lower().endswith(".txt"):
@@ -628,7 +249,7 @@ def render_citations(refs: list[dict], engine: RAGEngine):
                         height=280,
                         disabled=True,
                         label_visibility="collapsed",
-                        key=f"preview_{i}_{fn}",
+                        key=f"preview_{key_ns}_{i}",
                     )
 
 
@@ -685,6 +306,14 @@ def render_sidebar():
                         )
                     st.rerun()
 
+        st.markdown('<div class="sos-label" style="margin:12px 0 6px 0;">Scope</div>', unsafe_allow_html=True)
+        st.multiselect(
+            "State Filter",
+            options=STATE_SCOPE_OPTIONS,
+            default=[],
+            key="target_states",
+            help="Leave empty to search all states. Select specific states to narrow your search and improve precision.",
+        )
         st.divider()
 
         active_chat = st.session_state.chats[st.session_state.active]
@@ -722,7 +351,7 @@ def main():
         page_icon="⚖️",
         layout="wide",
     )
-    st.markdown(_CSS, unsafe_allow_html=True)
+    load_css()
 
     if not check_password():
         st.stop()
@@ -772,7 +401,7 @@ def main():
         st.rerun()
 
     # ── Render conversation ──────────────────────────────────────────────── #
-    for msg in active_chat["messages"]:
+    for msg_idx, msg in enumerate(active_chat["messages"]):
         with st.chat_message(msg["role"]):
             if msg["role"] == "assistant":
                 # Re-render styled footnotes from plain stored text
@@ -782,7 +411,7 @@ def main():
                 clean = re.sub(r'(\s*\[[\d\s\[\]]+\]\s*)+$', '', plain).rstrip()
                 styled = _styled_answer(clean, ref_count)
                 st.markdown(styled, unsafe_allow_html=True)
-                render_citations(msg.get("refs") or [], engine)
+                render_citations(msg.get("refs") or [], engine, key_ns=str(msg_idx))
             else:
                 st.markdown(msg["content"])
 
@@ -800,7 +429,12 @@ def _process_prompt(prompt: str, active_chat: dict, engine: RAGEngine):
 
     with st.chat_message("assistant"):
         with st.spinner("Searching regulations…"):
-            answer, refs, new_session_id = engine.query(prompt, session_id=session_id)
+            scope = list(st.session_state.get("target_states") or [])
+            answer, refs, new_session_id = engine.query(
+                prompt,
+                session_id=session_id,
+                target_states=scope,
+            )
 
         if active_chat["contextual"] and new_session_id:
             active_chat["session_id"] = new_session_id
@@ -808,7 +442,8 @@ def _process_prompt(prompt: str, active_chat: dict, engine: RAGEngine):
         answer = (answer or "").rstrip()
         styled = _styled_answer(answer, len(refs))
         st.markdown(styled, unsafe_allow_html=True)
-        render_citations(refs, engine)
+        # Same slot the assistant row will occupy after append (unique widget keys).
+        render_citations(refs, engine, key_ns=str(len(active_chat["messages"])))
 
     # Store plain answer text + refs (styled markers re-generated on re-render)
     active_chat["messages"].append({"role": "assistant", "content": answer, "refs": refs})
