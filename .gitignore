@@ -74,6 +74,7 @@ logs/
 .env
 .env.*
 !.env.example
+.streamlit/*
 .streamlit/secrets.toml
 secrets.toml
 *.secrets
@@ -97,3 +98,18 @@ src.zip
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# --- AWS ---
+aws-creds.json
+
+# --- Data ---
+*.json
+!.devcontainer/devcontainer.json
+*.jsonl
+*.pdf
+*.png
+*.jpg
+*.jpeg
+
+# --- AWS Copilot: local workspace only (manifests under copilot/ may be committed) ---
+copilot/*

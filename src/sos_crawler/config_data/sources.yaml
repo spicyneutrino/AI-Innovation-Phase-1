@@ -92,8 +92,10 @@ states:
     is_primary: false
     sos_home: https://doa.la.gov/doa/osr/louisiana-administrative-code/
     entrypoints:
-      - https://doa.la.gov/doa/osr/louisiana-administrative-code/
-    notes: "Title 46 covers all 3 agencies. PDFs per title volume. Playwright for accordion."
+      - https://www.doa.la.gov/media/z2pl5soj/46v33.docx
+      - https://www.doa.la.gov/media/t5scfw11/46v45.docx
+      - https://www.doa.la.gov/media/mtuakm0q/46v67.docx
+    notes: "Title 46 covers all 3 agencies. Spider downloads DOCX files directly and parses XML."
     agencies:
       medical-licensure:
         name: Louisiana State Board of Medical Examiners
@@ -110,8 +112,10 @@ states:
     sos_home: https://sos.tn.gov/publications/services/effective-rules-and-regulations-of-the-state-of-tennessee/
     entrypoints:
       - https://sos.tn.gov/publications/services/effective-rules-and-regulations-of-the-state-of-tennessee/
-      - https://sos.tn.gov/publications/services/administrative-register/
-    notes: "Agency chapter numbers: Medical=0880, RealEstate=1260, Dental=0460 (verify)."
+      - https://publications.tnsosfiles.com/rules/0460/
+      - https://publications.tnsosfiles.com/rules/0880/
+      - https://publications.tnsosfiles.com/rules/1260/
+    notes: "Agency chapter numbers: Dental=0460, Medical=0880, RealEstate=1260. Spider downloads chapter PDFs."
     agencies:
       medical-licensure:
         name: Tennessee Board of Medical Examiners
@@ -127,8 +131,10 @@ states:
     is_primary: false
     sos_home: https://rules.sos.ga.gov/gac/
     entrypoints:
-      - https://rules.sos.ga.gov/gac/
-    notes: "Fastcase-hosted. Department numbers: Medical~360, RealEstate~520, Dental~150 (verify)."
+      - https://rules.sos.ga.gov/gac/150
+      - https://rules.sos.ga.gov/gac/360
+      - https://rules.sos.ga.gov/gac/520
+    notes: "Fastcase-hosted. Department 150=dental, 360=medical-licensure, 520=real-estate. Server-rendered, no Playwright."
     agencies:
       medical-licensure:
         name: Georgia Composite Medical Board

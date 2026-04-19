@@ -172,6 +172,9 @@ class DocumentSavePipeline:
                 }
                 meta_dest.write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
+        # Clear binary body after saving — bytes are not JSON-serializable and
+        # downstream handlers (FeedExporter, ManifestPipeline) don't need it.
+        item["_body"] = None
         return item
 
 
