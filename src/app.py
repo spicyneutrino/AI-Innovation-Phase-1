@@ -210,6 +210,20 @@ def init_session_state():
         st.session_state.active = _new_chat("Chat 1")
     if "active" not in st.session_state or st.session_state.active not in st.session_state.chats:
         st.session_state.active = next(iter(st.session_state.chats))
+    if "target_states" not in st.session_state:
+        st.session_state.target_states = list(STATE_SCOPE_OPTIONS)
+
+
+def select_all_states() -> None:
+    st.session_state.target_states = list(STATE_SCOPE_OPTIONS)
+    for s in STATE_SCOPE_OPTIONS:
+        st.session_state[f"state_cb_{s}"] = True
+
+
+def clear_all_states() -> None:
+    st.session_state.target_states = []
+    for s in STATE_SCOPE_OPTIONS:
+        st.session_state[f"state_cb_{s}"] = False
 
 
 # ---------------------------------------------------------------------------
@@ -379,13 +393,42 @@ def render_sidebar():
                     st.rerun()
 
         st.markdown('<div class="sos-label" style="margin:12px 0 6px 0;">Scope</div>', unsafe_allow_html=True)
-        st.multiselect(
-            "State Filter",
-            options=STATE_SCOPE_OPTIONS,
-            default=STATE_SCOPE_OPTIONS,
-            key="target_states",
-            help="All states are selected by default. Remove states to narrow the search, or clear the selection to search the full knowledge base without a state filter.",
-        )
+
+        # State scope (accessible grid + quick actions)
+        a, b = st.columns(2)
+        with a:
+            if st.button("Select all", use_container_width=True, key="states_select_all"):
+                select_all_states()
+                st.rerun()
+        with b:
+            if st.button("Clear all", use_container_width=True, key="states_clear_all"):
+                clear_all_states()
+                st.rerun()
+
+        selected = set(st.session_state.get("target_states") or [])
+
+        def _sync_state_from_checkbox(state: str) -> None:
+            cur = set(st.session_state.get("target_states") or [])
+            if st.session_state.get(f"state_cb_{state}"):
+                cur.add(state)
+            else:
+                cur.discard(state)
+            st.session_state.target_states = sorted(cur, key=lambda x: STATE_SCOPE_OPTIONS.index(x))
+
+        cols = st.columns(3)
+        for idx, state in enumerate(STATE_SCOPE_OPTIONS):
+            cb_key = f"state_cb_{state}"
+            if cb_key not in st.session_state:
+                st.session_state[cb_key] = state in selected
+            with cols[idx % 3]:
+                st.checkbox(
+                    state,
+                    key=cb_key,
+                    on_change=_sync_state_from_checkbox,
+                    args=(state,),
+                )
+
+        st.caption("Tip: Clear all to search without a state filter.")
         st.divider()
 
         active_chat = st.session_state.chats[st.session_state.active]

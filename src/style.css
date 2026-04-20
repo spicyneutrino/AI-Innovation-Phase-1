@@ -3,6 +3,13 @@
 
 html, body, [class*="css"], .stMarkdown, .stText {
     font-family: 'Inter', sans-serif !important;
+    font-size: 16px !important;
+}
+
+.stApp p,
+.stApp span,
+.stApp label {
+    font-size: 16px !important;
 }
 
 /* ── Page ───────────────────────────────────────────────────────────────── */
@@ -90,7 +97,7 @@ html, body, [class*="css"], .stMarkdown, .stText {
 [data-testid="stSidebar"] label,
 [data-testid="stSidebar"] .stMarkdown p {
     color: #e8eeff !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
 }
 
 /* Active chat item (rendered as div, not button) */
@@ -270,9 +277,13 @@ hr { border-color: #1e2d4a !important; margin: 12px 0 !important; }
 h1, h2, h3, h4, h5, h6 {
     color: #ffffff !important;
 }
-h1 { font-size: 22px !important; font-weight: 600 !important; line-height: 1.2 !important; }
-h2 { font-size: 20px !important; font-weight: 600 !important; line-height: 1.2 !important; }
-h3 { font-size: 15px !important; font-weight: 600 !important; line-height: 1.2 !important; }
+h1 { font-size: 26px !important; font-weight: 600 !important; line-height: 1.2 !important; }
+h2 { font-size: 22px !important; font-weight: 600 !important; line-height: 1.2 !important; }
+h3 { font-size: 18px !important; font-weight: 600 !important; line-height: 1.2 !important; }
+
+[data-testid="stChatMessageContent"] {
+    font-size: 16px !important;
+}
 
 .stApp p,
 .stApp span,
@@ -438,7 +449,10 @@ code {
 }
 
 /* ── Checkbox ───────────────────────────────────────────────────────────── */
-[data-testid="stCheckbox"] label { color: #e8eeff !important; font-size: 13px !important; }
+[data-testid="stCheckbox"] label {
+    color: #e8eeff !important;
+    font-size: 14px !important;
+}
 
 /* ── Text area (doc preview) ─────────────────────────────────────────────── */
 [data-testid="stTextArea"] textarea {
@@ -506,4 +520,30 @@ code {
 /* 3. Center the eye-icon and text inside the input */
 .main div[data-testid="column"]:has(.login-hero) div[data-testid="stTextInput"] input {
     text-align: center !important;
+}
+
+/* ── Multiselect Tag Styling ────────────────────────────────────────────── */
+
+/* Target the tag background and text */
+span[data-baseweb="tag"] {
+    background-color: #5b8fff !important;
+    color: #0b1326 !important; /* Dark text for contrast on light blue */
+    border-radius: 4px !important;
+    padding: 2px 4px !important;
+}
+
+/* Target the "X" (close) icon color */
+span[data-baseweb="tag"] svg {
+    fill: #0b1326 !important;
+}
+
+/* Target the hover state of the "X" icon */
+span[data-baseweb="tag"] [role="button"]:hover {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Ensure the text inside the tag is bold and clear */
+span[data-baseweb="tag"] span {
+    font-weight: 600 !important;
+    font-size: 11px !important;
 }
