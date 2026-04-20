@@ -50,12 +50,14 @@ class RAGEngine:
                 },
             }
 
+            # Standardize state list from the UI
             combined_states = [
                 s.strip().upper()
                 for s in (target_states or [])
                 if isinstance(s, str) and s.strip()
             ]
 
+            # Always request enough chunks (Bedrock defaults to 5 if omitted)
             retrieval_config = {
                 "vectorSearchConfiguration": {
                     "numberOfResults": 20,
@@ -68,7 +70,7 @@ class RAGEngine:
                         "value": combined_states,
                     },
                 }
-                kb_configuration["retrievalConfiguration"] = retrieval_config
+            kb_configuration["retrievalConfiguration"] = retrieval_config
 
             params = {
                 "input": {"text": question},

@@ -1,3 +1,4 @@
+import base64
 import html
 import os
 import re
@@ -21,10 +22,22 @@ _STUB_STATES = {"GA", "LA", "TN"}
 STATE_SCOPE_OPTIONS = ["MS", "LA", "TN", "AR", "GA", "TX", "AL"]
 
 SUGGESTED_QUESTIONS = [
-    {"category": "Infrastructure", "q": "To allow a department to perform a technical review, request change order approvals must contain?"},
-    {"category": "Agencies",       "q": "What is the MJIC Unit responsible for?"},
-    {"category": "Agriculture",    "q": "What permit shall be required by any person or entity owning exotic livestock?"},
-    {"category": "Finance",        "q": "What is the filing application fee for a Loan Production Office?"},
+    {
+        "category": "Dental", 
+        "q": "Can a dental assistant monitor a patient under nitrous oxide in Mississippi?"
+    },
+    {
+        "category": "Real Estate", 
+        "q": "What are the continuing education hour requirements for a real estate broker in Louisiana?"
+    },
+    {
+        "category": "Medical", 
+        "q": "What are the biennial renewal and expiration date rules for a medical license in Georgia?"
+    },
+    {
+        "category": "Comparison", 
+        "q": "Compare the real estate broker renewal hours between Louisiana and Mississippi."
+    }
 ]
 
 # Optional bundled seal (same directory as this file or src/static/). PNGs are
@@ -52,6 +65,35 @@ def _show_logo(width: int = 88) -> None:
     )
 
 
+def _sidebar_brand_html(width: int = 96) -> str:
+    """Single centered block: seal image + title + subtitle (for sidebar only)."""
+    img_html = ""
+    for path in _LOGO_PATHS:
+        if path.is_file():
+            b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+            ext = path.suffix.lower().lstrip(".") or "png"
+            mime = "image/png" if ext == "png" else "image/jpeg" if ext in ("jpg", "jpeg") else f"image/{ext}"
+            img_html = (
+                f'<img src="data:{mime};base64,{b64}" width="{width}" alt="" '
+                'style="display:block;margin:0 auto 10px auto;" />'
+            )
+            break
+    if not img_html:
+        side = max(56, min(width, 120))
+        img_html = (
+            f'<div style="width:{side}px;height:{side}px;border-radius:50%;margin:0 auto 10px auto;'
+            "background:linear-gradient(160deg,#1e2d4a,#0d1528);border:2px solid #5b8fff;"
+            f'display:flex;align-items:center;justify-content:center;font-size:{side // 3}px;">⚖️</div>'
+        )
+    return (
+        '<div class="sos-sidebar-brand" style="text-align:center;">'
+        f"{img_html}"
+        '<h3 style="margin:0 0 4px 0;">SoS Regulation Assistant</h3>'
+        '<p style="margin:0;opacity:0.92;font-size:0.9em;">Multi-State Regulatory Intelligence</p>'
+        "</div>"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Design system CSS
 # ---------------------------------------------------------------------------
@@ -69,34 +111,70 @@ def load_css():
 # ---------------------------------------------------------------------------
 
 def check_password() -> bool:
-    def password_entered():
-        if st.session_state.get("password") == st.secrets["APP_PASSWORD"]:
+    def _check_password():
+        if st.session_state.get("password_input") == st.secrets["APP_PASSWORD"]:
             st.session_state["password_correct"] = True
-            del st.session_state["password"]
+            del st.session_state["password_input"]
         else:
             st.session_state["password_correct"] = False
 
     def _login_panel(show_error: bool) -> None:
-        _, col, _ = st.columns([1, 1.2, 1])
+        # Use a narrower center column for a tighter login feel
+        _, col, _ = st.columns([1, 1.5, 1])
+
         with col:
-            st.markdown('<div style="margin-top:40px;"></div>', unsafe_allow_html=True)
-            _show_logo(80)
+            # Spacer for top margin
+            st.markdown('<div style="margin-top:80px;"></div>', unsafe_allow_html=True)
+
+            logo_url = ""
+            for path in _LOGO_PATHS:
+                if path.is_file():
+                    b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+                    ext = path.suffix.lower().lstrip(".") or "png"
+                    mime = (
+                        "image/png"
+                        if ext == "png"
+                        else "image/jpeg"
+                        if ext in ("jpg", "jpeg")
+                        else f"image/{ext}"
+                    )
+                    logo_url = f"data:{mime};base64,{b64}"
+                    break
+
+            logo_html = (
+                f'<img src="{logo_url}" width="100" style="margin-bottom: 20px;" alt="">'
+                if logo_url
+                else '<div style="width:100px;height:100px;border-radius:50%;margin:0 auto 20px auto;'
+                "background:linear-gradient(160deg,#1e2d4a,#0d1528);border:2px solid #5b8fff;"
+                'display:flex;align-items:center;justify-content:center;font-size:34px;">⚖️</div>'
+            )
+
+            # Center the logo, title, and subtitle using a single markdown block
             st.markdown(
-                '<div class="login-wrap">'
-                "<h2>SoS Regulation Assistant</h2>"
-                "<p>Mississippi Secretary of State · Regulatory Intelligence</p>"
-                "</div>",
+                f"""
+                <div class="login-hero" style="text-align: center;">
+                    {logo_html}
+                    <h2 style="margin-bottom: 0;">SoS Regulation Assistant</h2>
+                    <p style="color: #94a3b8; margin-bottom: 30px;">Multi-State Regulatory Intelligence</p>
+                </div>
+                """,
                 unsafe_allow_html=True,
             )
+
             st.text_input(
                 "Password",
                 type="password",
-                on_change=password_entered,
-                key="password",
+                key="password_input",
+                on_change=_check_password,
                 autocomplete="current-password",
             )
+
             if show_error:
-                st.error("Incorrect password.")
+                st.markdown(
+                    '<p style="color: #ff4b4b; text-align: center; font-size: 14px; margin-top: 10px;">'
+                    "Invalid password.</p>",
+                    unsafe_allow_html=True,
+                )
 
     if "password_correct" not in st.session_state:
         _login_panel(False)
@@ -259,13 +337,7 @@ def render_citations(refs: list[dict], engine: RAGEngine, *, key_ns: str):
 
 def render_sidebar():
     with st.sidebar:
-        _show_logo(96)
-        st.markdown(
-            '<p style="font-size:14px;font-weight:600;color:#e8eeff;margin:6px 0 0 0;">'
-            "SoS Regulation Assistant</p>"
-            '<p style="font-size:11px;color:#94a3b8;margin:2px 0 0 0;">Mississippi · Regulatory Intelligence</p>',
-            unsafe_allow_html=True,
-        )
+        st.markdown(_sidebar_brand_html(96), unsafe_allow_html=True)
         st.divider()
 
         if st.button("＋  New Chat", use_container_width=True, key="new_chat_btn"):
@@ -279,7 +351,7 @@ def render_sidebar():
             msg_count = sum(1 for m in chat["messages"] if m["role"] == "user")
             count_str = f"{msg_count} msg{'s' if msg_count != 1 else ''}" if msg_count else "new"
 
-            col_name, col_del = st.columns([5, 1])
+            col_name, col_del = st.columns([11, 4])
             with col_name:
                 if is_active:
                     st.markdown(
@@ -296,7 +368,7 @@ def render_sidebar():
                         st.session_state.active = chat_id
                         st.rerun()
             with col_del:
-                if st.button("✕", key=f"del_{chat_id}", help="Delete chat"):
+                if st.button("✕", key=f"del_{chat_id}", help="Delete chat", use_container_width=True):
                     del st.session_state.chats[chat_id]
                     if st.session_state.active == chat_id:
                         st.session_state.active = (
@@ -310,9 +382,9 @@ def render_sidebar():
         st.multiselect(
             "State Filter",
             options=STATE_SCOPE_OPTIONS,
-            default=[],
+            default=STATE_SCOPE_OPTIONS,
             key="target_states",
-            help="Leave empty to search all states. Select specific states to narrow your search and improve precision.",
+            help="All states are selected by default. Remove states to narrow the search, or clear the selection to search the full knowledge base without a state filter.",
         )
         st.divider()
 
@@ -348,7 +420,7 @@ def render_sidebar():
 def main():
     st.set_page_config(
         page_title="SoS Regulation Assistant",
-        page_icon="⚖️",
+        page_icon="📜",
         layout="wide",
     )
     load_css()
@@ -370,8 +442,8 @@ def main():
         f'{active_chat["name"]}'
         f'<span class="ctx-badge {ctx_cls}">{ctx_label}</span>'
         f'</h1>'
-        f'<p style="margin:0;color:#94a3b8;font-size:13px;">'
-        f'Mississippi Secretary of State · Regulatory Intelligence'
+        f'<p style="margin:0;color:#e8eeff;font-size:13px;">'
+        f'Multi-State Regulatory Intelligence'
         f'</p>',
         unsafe_allow_html=True,
     )
@@ -382,14 +454,16 @@ def main():
         st.markdown(
             '<div class="welcome-hero">'
             '<h2>What would you like to know?</h2>'
-            '<p>Search across Mississippi Secretary of State regulatory rules and agency codes.</p>'
+            '<p>Search across Mississippi, Alabama, Louisiana, Georgia, Tennessee, Arkansas, and Texas for '
+            'regulations related to the Board of Medical Licensure, Mississippi Real Estate Commission, '
+            'and Board of Dental Examiners.</p>'
             '</div>',
             unsafe_allow_html=True,
         )
         cols = st.columns(2)
         for idx, item in enumerate(SUGGESTED_QUESTIONS):
             with cols[idx % 2]:
-                label = f"{item['category'].upper()}\n{item['q']}"
+                label = item["q"]
                 if st.button(label, key=f"suggested_{idx}", use_container_width=True):
                     st.session_state.selected_question = item["q"]
                     st.rerun()

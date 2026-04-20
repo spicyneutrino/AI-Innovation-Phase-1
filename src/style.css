@@ -20,13 +20,68 @@ html, body, [class*="css"], .stMarkdown, .stText {
 [data-testid="stSidebar"] {
     background-color: #0b1326 !important;
     border-right: 1px solid #1e2d4a !important;
-    min-width: 240px !important;
-    max-width: 240px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
 }
 [data-testid="stSidebar"] .block-container {
     padding-top: 20px;
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 14px;
+    padding-right: 16px;
+    overflow-x: visible !important;
+}
+/* Sidebar brand block: logo + title + subtitle in one centered stack */
+[data-testid="stSidebar"] .sos-sidebar-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 4px;
+}
+[data-testid="stSidebar"] .sos-sidebar-brand h3 {
+    text-align: center !important;
+    width: 100% !important;
+}
+[data-testid="stSidebar"] .sos-sidebar-brand p {
+    text-align: center !important;
+    width: 100% !important;
+}
+/* Center seal / logo (Streamlit wraps st.image in a flex row — center the whole block) */
+.main [data-testid="stImageContainer"],
+.main [data-testid="stImage"],
+[data-testid="stSidebar"] [data-testid="stImageContainer"],
+[data-testid="stSidebar"] [data-testid="stImage"] {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+.main [data-testid="stImageContainer"] img,
+.main [data-testid="stImageContainer"] picture img,
+.main [data-testid="stImage"] img,
+.main [data-testid="stImage"] picture img,
+[data-testid="stSidebar"] [data-testid="stImageContainer"] img,
+[data-testid="stSidebar"] [data-testid="stImageContainer"] picture img,
+[data-testid="stSidebar"] [data-testid="stImage"] img,
+[data-testid="stSidebar"] [data-testid="stImage"] picture img {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+/* Avoid clipping controls (delete chat, multiselect chevrons) at the right edge */
+[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+    overflow: visible !important;
+}
+[data-testid="stSidebar"] div[data-testid="column"] {
+    overflow-x: visible !important;
+}
+/* Conversation row: right column is the compact delete control — keep it fully visible */
+[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] div[data-testid="column"]:last-child .stButton > button {
+    min-width: 40px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    box-sizing: border-box !important;
 }
 [data-testid="stSidebar"] hr {
     border-color: #1e2d4a !important;
@@ -111,7 +166,7 @@ button[data-testid="baseButton-primary"] {
     border-color: #5b8fff !important;
     box-shadow: 0 0 0 2px rgba(91, 143, 255, 0.2) !important;
 }
-[data-testid="stTextInput"] input::placeholder { color: #94a3b8 !important; }
+[data-testid="stTextInput"] input::placeholder { color: rgba(232, 238, 255, 0.65) !important; }
 
 /* ── Chat input ─────────────────────────────────────────────────────────── */
 [data-testid="stChatInputContainer"] {
@@ -131,7 +186,7 @@ button[data-testid="baseButton-primary"] {
     border-color: #5b8fff !important;
     box-shadow: 0 0 0 2px rgba(91, 143, 255, 0.2) !important;
 }
-[data-testid="stChatInputContainer"] textarea::placeholder { color: #94a3b8 !important; }
+[data-testid="stChatInputContainer"] textarea::placeholder { color: rgba(232, 238, 255, 0.65) !important; }
 
 /* ── Chat messages ───────────────────────────────────────────────────────── */
 [data-testid="stChatMessage"] {
@@ -212,9 +267,27 @@ sup.fn-ref {
 hr { border-color: #1e2d4a !important; margin: 12px 0 !important; }
 
 /* ── Typography ─────────────────────────────────────────────────────────── */
-h1 { font-size: 22px !important; font-weight: 600 !important; color: #e8eeff !important; line-height: 1.2 !important; }
-h2 { font-size: 20px !important; font-weight: 600 !important; color: #e8eeff !important; line-height: 1.2 !important; }
-h3 { font-size: 15px !important; font-weight: 600 !important; color: #e8eeff !important; line-height: 1.2 !important; }
+h1, h2, h3, h4, h5, h6 {
+    color: #ffffff !important;
+}
+h1 { font-size: 22px !important; font-weight: 600 !important; line-height: 1.2 !important; }
+h2 { font-size: 20px !important; font-weight: 600 !important; line-height: 1.2 !important; }
+h3 { font-size: 15px !important; font-weight: 600 !important; line-height: 1.2 !important; }
+
+.stApp p,
+.stApp span,
+.stApp label,
+.stMarkdown,
+.stMarkdown p,
+.stMarkdown span,
+.stText {
+    color: #e8eeff !important;
+}
+
+[data-testid="stWidgetLabel"] p,
+[data-testid="stWidgetLabel"] label {
+    color: #e8eeff !important;
+}
 
 /* ── Inline code / citations ────────────────────────────────────────────── */
 code {
@@ -258,7 +331,7 @@ code {
     margin-left: 10px;
 }
 .ctx-on  { background-color: rgba(91, 143, 255, 0.12); color: #5b8fff; border: 1px solid rgba(91,143,255,0.3); }
-.ctx-off { background-color: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+.ctx-off { background-color: rgba(148, 163, 184, 0.1); color: #e8eeff !important; border: 1px solid rgba(148,163,184,0.2); }
 
 /* ── Citation meta rows ─────────────────────────────────────────────────── */
 .sos-meta-row {
@@ -271,7 +344,7 @@ code {
 }
 .sos-meta-key {
     font-weight: 500;
-    color: #94a3b8;
+    color: #e8eeff !important;
     min-width: 90px;
     font-size: 11px;
     text-transform: uppercase;
@@ -290,7 +363,7 @@ code {
     font-weight: 500;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: #94a3b8;
+    color: #e8eeff !important;
     margin: 0 0 8px 0;
 }
 
@@ -302,11 +375,11 @@ code {
 .welcome-hero h2 {
     font-size: 26px !important;
     font-weight: 600 !important;
-    color: #e8eeff !important;
+    color: #ffffff !important;
     margin: 0 0 8px 0 !important;
 }
 .welcome-hero p {
-    color: #94a3b8;
+    color: #e8eeff !important;
     font-size: 15px;
     margin: 0;
 }
@@ -325,14 +398,26 @@ code {
     color: #e8eeff;
     line-height: 1.5;
 }
-div[data-testid^="column"] .stButton > button {
+/* Suggested question cards (main area only) */
+.stApp .main div[data-testid^="column"] .stButton > button {
     text-align: left !important;
     white-space: pre-line !important;
     height: auto !important;
-    min-height: 88px !important;
-    padding: 14px 16px !important;
-    line-height: 1.45 !important;
-    font-size: 13px !important;
+    min-height: 100px !important; /* Slightly taller for more room */
+    padding: 26px 32px !important; /* More internal breathing room */
+    line-height: 1.6 !important;    /* More breathing room between lines */
+    font-size: 14px !important;    /* Slightly larger font */
+    margin-bottom: 12px !important; /* Space between rows */
+    background-color: #111c35 !important;
+    border: 1px solid #1e2d4a !important;
+}
+
+/* Optional: Add a subtle hover effect to make them feel interactive */
+.stApp .main div[data-testid^="column"] .stButton > button:hover {
+    border-color: #5b8fff !important;
+    background-color: #16223d !important;
+    transform: translateY(-2px);
+    transition: all 0.2s ease !important;
 }
 
 /* ── Link buttons ────────────────────────────────────────────────────────── */
@@ -360,7 +445,7 @@ div[data-testid^="column"] .stButton > button {
     background-color: #0b1326 !important;
     border: 1px solid #1e2d4a !important;
     border-radius: 6px !important;
-    color: #94a3b8 !important;
+    color: #e8eeff !important;
     font-family: 'JetBrains Mono', monospace !important;
     font-size: 12px !important;
     line-height: 1.6 !important;
@@ -373,11 +458,11 @@ div[data-testid^="column"] .stButton > button {
 .login-wrap h2 {
     font-size: 20px !important;
     font-weight: 600 !important;
-    color: #e8eeff !important;
+    color: #ffffff !important;
     margin: 0 0 6px 0 !important;
 }
 .login-wrap p {
-    color: #94a3b8;
+    color: #e8eeff !important;
     font-size: 14px;
     margin: 0 0 20px 0;
 }
@@ -390,3 +475,35 @@ div[data-testid^="column"] .stButton > button {
 
 /* ── Spinner ─────────────────────────────────────────────────────────────── */
 [data-testid="stSpinner"] { color: #5b8fff !important; }
+
+/* ── Login Page Nuclear Centering ───────────────────────────────────────── */
+/* Scope to the login column only (avoid impacting the main app layout). */
+.main div[data-testid="column"]:has(.login-hero) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* 1. Target the Password label specifically */
+.main div[data-testid="column"]:has(.login-hero) [data-testid="stWidgetLabel"] {
+    text-align: center !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+.main div[data-testid="column"]:has(.login-hero) [data-testid="stWidgetLabel"] p {
+    justify-content: center !important; /* Centers the flex-based label */
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+}
+
+/* 2. Center the input box itself */
+.main div[data-testid="column"]:has(.login-hero) div[data-testid="stTextInput"] > div {
+    margin: 0 auto !important;
+    max-width: 400px !important;
+}
+
+/* 3. Center the eye-icon and text inside the input */
+.main div[data-testid="column"]:has(.login-hero) div[data-testid="stTextInput"] input {
+    text-align: center !important;
+}
