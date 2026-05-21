@@ -1,7 +1,7 @@
 [project]
 name = "ms-regulations"
 version = "0.1.0"
-description = "Add your description here"
+description = "Multi-state Secretary of State regulatory RAG assistant and Scrapy crawler (Innovation Hub PoC)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

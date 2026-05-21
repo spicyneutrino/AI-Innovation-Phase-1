@@ -1,116 +1,110 @@
-# 🏛️ Mississippi SoS Regulation Assistant
+# SoS Regulation Assistant
 
-A Retrieval-Augmented Generation (RAG) application that queries Mississippi Secretary of State regulations using Amazon Bedrock (AI models) and OpenSearch Serverless (vector database).
+## Overview
 
----
+This repository contains the code and documentation for a Mississippi Artificial Intelligence Innovation Hub Proof of Concept focused on **multi-state Secretary of State regulatory intelligence**. The PoC was developed to explore whether retrieval-augmented generation (RAG) over administrative rules could help agency staff and researchers find, compare, and cite regulations across several southeastern states. The project demonstrates feasibility within a limited prototype environment and is **not a production-ready solution**.
 
-## Quick Start
+## Agency Problem
 
-1. Get the latest code
-   ```bash
-   git clone https://github.com/spicyneutrino/AI-Innovation-Phase-1.git
-   cd AI-Innovation-Phase-1
-   ```
+Regulatory rules for dental boards, medical licensure boards, and real estate commissions are published across many state websites with different formats (PDF, HTML, DOCX, and SPA-driven portals). Staff need a single place to ask natural-language questions, see cited sources, and compare requirements between states without manually searching each code system.
 
-2. Install dependencies
-   This project uses uv to manage dependencies automatically from the lockfile.
-   ```bash
-   uv sync
-   ```
+## PoC Scope and Demonstrated Capabilities
 
-   If `uv` is not available, you can:
-   - Install `uv` (recommended):
-     ```bash
-     pip install --user uv
-     # or
-     pipx install uv
-     ```
-   - Or install dependencies directly:
-     ```bash
-     pip install -r requirements.txt
-     ```
-   - Or install and run Streamlit directly:
-     ```bash
-     pip install --user streamlit
-     python -m streamlit run src/app.py
-     ```
+- **RAG chat assistant** — Streamlit UI (`src/app.py`) queries Amazon Bedrock Knowledge Bases with citations and optional multi-turn context.
+- **Automated crawler** — Scrapy + Playwright pipeline (`src/sos_crawler/`) for **MS, AL, AR, GA, LA, TN, and TX**, focused on three agency types per state.
+- **State scope controls** — Sidebar checkbox grid to include or exclude states per query.
+- **Post-crawl tooling** — QA and enrichment CLI for manifests and knowledge-package JSONL.
+- **CI crawl workflow** — Scheduled GitHub Actions run (artifacts only; no regulatory corpora committed to git).
 
-   Consider using a virtual environment (venv) or pipx to avoid polluting your global Python environment.
+## Architecture Overview
 
-3. Set AWS credentials
-   The app needs credentials to access your AWS account. Use the environment variables below (replace the placeholder values).
-   ```bash
-   export AWS_ACCESS_KEY_ID="YOUR_ACCESS_KEY"
-   export AWS_SECRET_ACCESS_KEY="YOUR_SECRET_KEY"
-   export AWS_SESSION_TOKEN="YOUR_SESSION_TOKEN"
-   export AWS_DEFAULT_REGION="us-east-1"
-   ```
+See [docs/architecture.md](docs/architecture.md) for components, data flow, and a diagram of crawler → S3/KB → Streamlit.
 
-4. Run the application
-   Starts the local web server and opens the app in your browser:
-   ```bash
-   uv run streamlit run src/app.py
-   ```
+## Repository Structure
 
-## SoS crawler and Playwright (distrobox)
+```
+├── README.md
+├── LICENSE
+├── .env.example
+├── CHANGELOG.md
+├── docs/                 # Architecture, setup, data, limitations, testing
+├── src/
+│   ├── app.py            # Streamlit RAG UI
+│   ├── rag_engine.py     # Bedrock RetrieveAndGenerate wrapper
+│   ├── style.css         # UI theme
+│   └── sos_crawler/      # Crawler package (spiders, pipelines, tools)
+├── scripts/              # S3 upload and metadata helpers
+├── .github/workflows/    # Scheduled crawler CI
+├── Dockerfile            # Crawler container (Playwright)
+└── pyproject.toml        # uv / package metadata
+```
 
-The automated crawler is packaged as `sos_crawler` and uses Scrapy + Playwright (Chromium). On hosts where Playwright’s browser dependencies are isolated in a container, use your Playwright distrobox first, then install and run from the repository root:
+Generated crawl output lives under `var/sos_crawler/` (gitignored).
+
+## Setup
+
+**Quick start:**
 
 ```bash
-distrobox enter playwright-distrobox
-cd /path/to/AI-Innovation-Phase-1
+git clone https://github.com/spicyneutrino/AI-Innovation-Phase-1.git
+cd AI-Innovation-Phase-1
 uv sync
+cp .env.example .env   # edit with your sandbox values
+uv run streamlit run src/app.py
+```
+
+Full prerequisites, crawler, Docker, and troubleshooting: [docs/setup.md](docs/setup.md).
+
+## Configuration
+
+Copy [.env.example](.env.example) to `.env` and set:
+
+- AWS credentials and region
+- `BEDROCK_KB_ID` (required for your sandbox Knowledge Base)
+- `APP_PASSWORD` (UI gate)
+
+On Streamlit Cloud, use the same keys in `.streamlit/secrets.toml` (not committed). Do not commit real secrets or production resource IDs you cannot rotate.
+
+## Data Notes
+
+**This repository does not include real data.** Any future samples would be placeholder or illustrative only.
+
+Indexing, S3 layout, and Bedrock sync are operator responsibilities. Details: [docs/data-notes.md](docs/data-notes.md).
+
+## Usage
+
+1. Start the app: `uv run streamlit run src/app.py`
+2. Sign in with the configured password.
+3. Use the **Scope** sidebar to select states (or clear all to search the full knowledge base without a state filter).
+4. Ask questions in the chat or use the suggested prompts on the welcome screen.
+
+**Optional — run the crawler:**
+
+```bash
 uv run playwright install chromium
-uv run sos-crawler crawl --states AR --max-retries 0
+uv run sos-crawler crawl --states MS AL AR --mode designated --run-qa --run-enrichment
 ```
 
-By default, crawl outputs are written under `var/sos_crawler/` (logs/output/downloads/cache). You can override with `SOS_CRAWLER_RUNTIME_DIR=/path` or `--runtime-dir /path`.
+## Testing and Evaluation
 
-### AWS Lambda note (read-only filesystem)
+Manual validation steps, sample evaluation queries, and CI notes: [docs/testing.md](docs/testing.md).
 
-AWS Lambda is read-only except for `/tmp`. When `AWS_LAMBDA_FUNCTION_NAME` is set, the crawler will automatically use:
+## Limitations
 
-- `/tmp/sos_crawler` (unless you override with `SOS_CRAWLER_RUNTIME_DIR` or `--runtime-dir`)
+This PoC was developed within a limited timeline and controlled environment. It may contain simplified workflows, mock integrations, limited testing coverage, and prototype user interfaces.
 
-## SoS crawler with Docker (Playwright included)
+See [docs/limitations.md](docs/limitations.md) for security, scope, and production gaps.
 
-If you don’t want to use distrobox, you can run the crawler in Docker. This is **crawler-only** (no Streamlit app) and includes Chromium + Playwright dependencies via the official Playwright base image.
+## Disclaimer
 
-### Build
+This repository contains code and supporting materials developed as part of a Mississippi Artificial Intelligence Innovation Hub Proof of Concept project. The contents are provided for prototype demonstration purposes. They are not production ready by default and may include simplified workflows, incomplete security guardrails, placeholder integrations, or reduced controls appropriate only for a Proof-of-Concept environment.
 
-```bash
-docker build -t sos-crawler .
-```
+Do not use this software with production data or in production environments without additional architecture, security, privacy, testing, and stakeholder review.
 
-### Run (single state)
+## License
 
-Mount the runtime directory so outputs land on your host:
+Released under the [MIT License](LICENSE).
 
-```bash
-docker run --rm \
-  -v "$PWD/var/sos_crawler:/app/var/sos_crawler" \
-  -e SOS_CRAWLER_RUNTIME_DIR=/app/var/sos_crawler \
-  sos-crawler uv run sos-crawler crawl --states TX --max-retries 0
-```
+## Contributors
 
-### Run (multi-state parallel)
-
-```bash
-docker run --rm \
-  -v "$PWD/var/sos_crawler:/app/var/sos_crawler" \
-  -e SOS_CRAWLER_RUNTIME_DIR=/app/var/sos_crawler \
-  sos-crawler uv run sos-crawler crawl --states MS AL AR TX --max-workers 4 --max-retries 0
-```
-
-### Docker Compose (optional)
-
-```bash
-docker compose build
-docker compose run --rm crawler uv run sos-crawler crawl --states AL --max-retries 0
-```
-
-## Troubleshooting
-- Ensure your AWS credentials and region are set correctly.
-- If commands fail, confirm `uv` is installed and available in your PATH.
-
-
+**SoS Innovation Hub Team** (placeholder — update with final attribution before Hub sign-off).
