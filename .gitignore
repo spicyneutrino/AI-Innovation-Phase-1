@@ -66,9 +66,15 @@ output/
 logs/
 *.log
 
-# --- Markdown docs (keep only README) ---
+# --- Docs & local AI workspace (only README.md belongs in git) ---
+# Deny all markdown; add exceptions with !path/to/file.md if a doc must be public.
 *.md
 !README.md
+.cursor/
+.claude/
+.codex/
+.agents/
+.cursorrules
 
 # --- Secrets & env ---
 .env
